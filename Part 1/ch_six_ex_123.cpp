@@ -5,19 +5,22 @@
 //
 
 /*
-    This file is known as calculator02buggy.cpp
-
-    I have inserted 5 errors that should cause this not to compile
-    I have inserted 3 logic errors that should cause the program to give wrong results
-
-    First try to find an remove the bugs without looking in the book.
-    If that gets tedious, compare the code to that in the book (or posted source code)
-
-    Happy hunting!
+    This file started as calculator02buggy.cpp
+    
+    I removed the bugs and added factorial + remainder fucntionality.
 
 */
 
 #include "../std_lib_facilities.h"
+
+const char number = '8';
+const char quit = 'q';
+const char print = ';';
+
+double expression();    // declaration so that primary() can call expression()
+int calc_fact(int i);
+double factorial();
+
 
 //------------------------------------------------------------------------------
 
@@ -76,9 +79,9 @@ Token Token_stream::get()
     cin >> ch;    // note that >> skips whitespace (space, newline, tab, etc.)
 
     switch (ch) {
-        case '=':    // for "print"
-        case 'x':    // for "quit"
-        case '(': case ')': case '}': case '{': case '+': case '-': case '*': case '/': case '!':
+        case print:    // for "print"
+        case quit:    // for "quit"
+        case '(': case ')': case '}': case '{': case '+': case '-': case '*': case '/': case '!': case '%':
             return Token(ch);        // let each character represent itself
         case '.':
         case '0': case '1': case '2': case '3': case '4':
@@ -87,7 +90,8 @@ Token Token_stream::get()
             cin.putback(ch);         // put digit back into the input stream
             double val;
             cin >> val;              // read a floating-point number
-            return Token('8', val);   // let '8' represent "a number"
+            // if(cin >> ch && ch == '!')
+            return Token(number, val);   // let '8' represent "a number"
             break;
         }
     default:
@@ -102,7 +106,7 @@ Token_stream ts;        // provides get() and putback()
 
 //------------------------------------------------------------------------------
 
-double expression();    // declaration so that primary() can call expression()
+
 
 //------------------------------------------------------------------------------
 
@@ -122,11 +126,16 @@ double primary()
         {
             double d = expression();
             t = ts.get();
-            if (t.kind != '}') error("expected a closing brack }");
+            if (t.kind != '}') error("expected a closing bracket }");
             return d;
         }
-        case '8':            // we use '8' to represent a number
+        case '8': {          // we use '8' to represent a number  
             return t.value;  // return the number's value
+        }
+        case '-':           // add unary plus and minus
+            return (-1 * primary());
+        case '+':
+            return primary();
         default:
             error("primary expected");
             return 0;
@@ -144,14 +153,22 @@ double term()
     while (true) {
         switch (t.kind) {
         case '*':
-            left *= primary();
+            left *= factorial();
             t = ts.get();
             break;
         case '/':
         {
-            double d = primary();
+            double d = factorial();
             if (d == 0) error("divide by zero");
             left /= d;
+            t = ts.get();
+            break;
+        }
+        case '%':{ // allow modulo, but throw error if there is a narrowing conversion
+            int i1 = narrow_cast<int>(left);
+            int i2 = narrow_cast<int>(factorial());
+            if (i2 == 0) error("%: attempted division by 0");
+            left = i1%i2;
             t = ts.get();
             break;
         }
@@ -166,6 +183,7 @@ int calc_fact(int f){
     else if (f == 0) return 1; 
     error("negative factorial");
 }
+
 double factorial(){
     double left = term();
     Token t = ts.get();
@@ -195,11 +213,11 @@ double expression()
     while (true) {
         switch (t.kind) {
         case '+':
-            left += term();    // evaluate Term and add
+            left += factorial();    // evaluate Term and add
             t = ts.get();
             break;
         case '-':
-            left -= term();    // evaluate Term and subtract
+            left -= factorial();    // evaluate Term and subtract
             t = ts.get();
             break;
         default:
@@ -219,23 +237,24 @@ int main(){
             while(cin)
             {
                 Token t = ts.get();
-
-                if(t.kind == 'x') break; //'q' for quit
-                if(t.kind == '=')
-                    cout << "=" << val << "\n";
-                else
-                    ts.putback(t);
+                // while(t.kind == print) t = ts.get();
+                if(t.kind == quit) break;
+                if(t.kind == print){
+                    cout << "= " << val << '\n';
+                }
+                else {ts.putback(t);}
                 val = expression();
+                
             }
 
-        keep_window_open("x");
+        keep_window_open("~~");
     } catch (exception& e) {
         cerr << e.what() << endl;
-        keep_window_open ("x");
+        keep_window_open ("~~");
         return 1;
     } catch (...) {
         cerr << "exception \n";
-        keep_window_open ("x");
+        keep_window_open ("~~");
         return 2;
     }
 }

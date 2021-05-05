@@ -1,5 +1,5 @@
 // This solution error checks the input but does not error if there
-// is a duplicate, it only prints out that there was a duplicate.
+// is a duplicate name value, it only prints out that there was a duplicate.
 
 #include "../std_lib_facilities.h"
 
