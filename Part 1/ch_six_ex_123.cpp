@@ -55,6 +55,7 @@ double get_value(string s){
     for (Variable v : var_table)
         if (v.name == s) return v.value;
     error("get undefined variable");
+    return 0.0;
 }
 
 void set_value(string s, double d){
@@ -75,9 +76,9 @@ bool is_declared(string var){
 }
 
 double define_name(string var, double val){
-    if(is_declared(var)) error(var, " declared twice");
-    var_table.push_back(Variable(var, val));
-
+    if(is_declared(var)){ error(var, " declared twice"); return 1.0;}
+    var_table.push_back(Variable(var, val)); 
+    return 0;
 }
 //------------------------------------------------------------------------------
 
@@ -234,6 +235,7 @@ int calc_fact(int f){
     if (f > 0) return (f * calc_fact(f-1));
     else if (f == 0) return 1; 
     error("negative factorial");
+    return 0;
 }
 
 double factorial(){
