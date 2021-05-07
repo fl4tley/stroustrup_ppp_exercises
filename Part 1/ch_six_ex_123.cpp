@@ -16,6 +16,11 @@
 const char number = '8';
 const char quit = 'q';
 const char print = ';';
+const char let = 'L';
+const char name = 'a';
+
+const string declkey = "let";
+
 
 double expression();    // declaration so that primary() can call expression()
 int calc_fact(int i);
@@ -27,13 +32,53 @@ double factorial();
 class Token{
 public:
     char kind;        // what kind of token
-    double value;     // for numbers: a value 
+    double value;     // for numbers: a value
+    string name; 
     Token(char ch)    // make a Token from a char
         :kind(ch), value(0) { }
     Token(char ch, double val)     // make a Token from a char and a double
         :kind(ch), value(val) { }
+    Token(char ch, string n)
+        :kind{ch}, name{n} {}
 };
 
+class Variable{
+    public:
+        string name;
+        double value;
+        Variable(string s, double v) : name(s), value(v) { }
+};
+
+vector<Variable> var_table;
+
+double get_value(string s){
+    for (Variable v : var_table)
+        if (v.name == s) return v.value;
+    error("get undefined variable");
+}
+
+void set_value(string s, double d){
+    for (Variable v : var_table){
+        if(v.name == s){
+            v.value = d;
+            return;
+        }
+    }
+    error("set undefined variable");
+}
+
+bool is_declared(string var){
+    for (Variable v : var_table){
+        if (v.name == var) return true;
+    }
+    return false;
+}
+
+double define_name(string var, double val){
+    if(is_declared(var)) error(var, " declared twice");
+    var_table.push_back(Variable(var, val));
+
+}
 //------------------------------------------------------------------------------
 
 class Token_stream {
@@ -95,6 +140,13 @@ Token Token_stream::get()
             break;
         }
     default:
+        if(isalpha(ch)){
+            cin.putback(ch);
+            string s;
+            cin >> s;
+            if (s == declkey) return Token(let);
+            return Token{name,s};
+        }
         error("Bad token");
         return 0;
     }
@@ -229,6 +281,28 @@ double expression()
 
 //------------------------------------------------------------------------------
 
+double declaration(){
+    Token t = ts.get();
+    if(t.kind != name) error ("name expected in definition");
+    string var_name = t.name;
+    
+    Token t2 = ts.get();
+    if (t2.kind != '=') error(" missing the = sign from the declaration of", var_name);
+
+    double d = expression();
+    define_name(var_name, d);
+    return d;
+}
+double statement(){
+    Token t = ts.get();
+    switch (t.kind){
+        case let:
+            return declaration();
+        default:
+            ts.putback(t);
+            return expression();
+    }
+}
 int main(){
     std::cout << "Welcome to Calculator\n";
 
@@ -243,7 +317,7 @@ int main(){
                     cout << "= " << val << '\n';
                 }
                 else {ts.putback(t);}
-                val = expression();
+                val = statement();
                 
             }
 
