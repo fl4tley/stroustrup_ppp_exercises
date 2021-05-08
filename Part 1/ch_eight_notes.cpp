@@ -32,7 +32,7 @@ vector<int> pass_by_const_ref(const vector<int>& argum){
 }
 
 // Passing in without the const will allow us to modify the contents at the address 
-// specified by argum
+// specified by the argument
 vector<vector<int>> pass_by_ref(vector<vector<int>>& argum, int outerl, int innerl){
     // We can also use & to get a refernce to a specific location that will make referencing that memory faster and easier from a 
     // notation perspective.
